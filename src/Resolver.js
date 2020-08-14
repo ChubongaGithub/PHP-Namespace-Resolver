@@ -45,6 +45,7 @@ class Resolver {
         phpClasses = phpClasses.concat(this.getInitializedWithNew(text));
         phpClasses = phpClasses.concat(this.getFromStaticCalls(text));
         phpClasses = phpClasses.concat(this.getReturnTypeHints(text));
+        phpClasses = phpClasses.concat(this.getAnnotations(text));
 
         return phpClasses.filter((v, i, a) => a.indexOf(v) === i);
     }
@@ -128,6 +129,19 @@ class Resolver {
         // - public function test(): ?User
         regex = /\: [\?]?([A-Z][A-Za-z0-9\-\_\|]*)/g;
         matches = [];
+
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+
+        return phpClasses;
+    }
+
+    // Parse annotations whose class names are followed by '\' or '('
+    getAnnotations(text) {
+        let regex = /\@([A-Z][A-Za-z0-9\-\_]*)(?:[\\\()])/gm;
+        let matches = [];
+        let phpClasses = [];
 
         while (matches = regex.exec(text)) {
             phpClasses.push(matches[1]);
