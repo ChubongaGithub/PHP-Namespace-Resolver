@@ -44,6 +44,7 @@ class Resolver {
         phpClasses = phpClasses.concat(this.getFromFunctionParameters(text));
         phpClasses = phpClasses.concat(this.getInitializedWithNew(text));
         phpClasses = phpClasses.concat(this.getFromStaticCalls(text));
+        phpClasses = phpClasses.concat(this.getReturnTypeHints(text));
 
         return phpClasses.filter((v, i, a) => a.indexOf(v) === i);
     }
@@ -97,6 +98,36 @@ class Resolver {
         let regex = /([A-Z][A-Za-z0-9\-\_]*)::/gm;
         let matches = [];
         let phpClasses = [];
+
+        while (matches = regex.exec(text)) {
+            phpClasses.push(matches[1]);
+        }
+
+        return phpClasses;
+    }
+
+    getReturnTypeHints(text) {
+        // Parse @return doc blocks
+        let regex = /\@return ([A-Z][A-Za-z0-9\-\_\|]*)/g;
+        let matches = [];
+        let phpClasses = [];
+
+        while(matches = regex.exec(text)) {
+            let returnClasses = matches[1].split('|');
+
+            for (let className of returnClasses) {
+                // Starts with a capital letter
+                if (className && /[A-Z]/.test(className[0])) {
+                    phpClasses.push(className);
+                }
+            }
+        }
+
+        // Parse function return type hints
+        // - public function test(): User
+        // - public function test(): ?User
+        regex = /\: [\?]?([A-Z][A-Za-z0-9\-\_\|]*)/g;
+        matches = [];
 
         while (matches = regex.exec(text)) {
             phpClasses.push(matches[1]);
